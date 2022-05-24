@@ -1,10 +1,11 @@
 #include <FastLED.h>
 #define DATA_PIN 2
-#define NUM_LEDS 170
+#define NUM_LEDS 86
 #define BUTTON_PORT 3
+#define NUM_OFFSET 9
 CRGB leds[NUM_LEDS];
 
-int mode = 0;
+int mode = 4;
 int buttonState = 0;
 
 /**
@@ -107,14 +108,17 @@ void rainbow(long millis) {
  */
 void layerBottomToTop(long millis) {
 
-  int h2 = millis / 6000 * 40;
-  int h1 = h2 + 40;
+  int h1 = (millis / 6000) * 40;
+  int h2 = h1 + 40;
   
-  int pos = (int)(millis % 6000);
+  int pos = (int)(millis % 6000) * (NUM_LEDS / 6000.0);
   for(int i = 0; i<NUM_LEDS; i++) {
 
-    double hc1 = max(min(pos - (i*1000) - 1000 / -10.0, 100),0) / 100.0;
-    double hc2 = min(1 - hc1, 1);
+    double distance = i - pos;
+    if(distance > 1) distance = 1;
+    else if(distance < -1) distance = -1;
+    double hc1 = (distance + 1) / 2.0;
+    double hc2 = 1 - hc1;
     
     leds[i] = CHSV(h1 * hc1 + h2 * hc2, 255, 255);
   }
@@ -127,7 +131,7 @@ void layerBottomToTop(long millis) {
  */
 void perlinColor(long millis) {
   for(int i = 0; i < NUM_LEDS; i++) {
-    int hue = inoise8(i, millis);
+    int hue = inoise8(i*5, millis / 5);
     leds[i] = CHSV(hue, 255, 255);
   }
 }
@@ -138,7 +142,12 @@ void perlinColor(long millis) {
  * @param millis timestamp to show animation to
  */
 void rainbowRoated(long millis) {
-    //TODO
+  for(int offset = 0; offset < NUM_OFFSET; offset++) {
+    for(int i = offset; i < NUM_LEDS; i+=NUM_OFFSET) {
+      int color = (millis / 20) + (offset * 255.0 / NUM_OFFSET);
+      leds[i] = CHSV(color % 255, 255, 255);
+    }
+  }
 }
 
 /**
@@ -147,7 +156,25 @@ void rainbowRoated(long millis) {
  * @param millis timestamp to show animation to
  */
 void toCenter(long millis) {
-    //TODO
+  //TODO
+  double pos = (millis % 9000) / 1000.0;
+  for(int i = 0; i<NUM_LEDS; i++) {
+    int offset = i % NUM_OFFSET;
+    int hue = offset * (255.0 / NUM_OFFSET);
+    double distance = smallestDistance(offset, pos, NUM_OFFSET);
+    if(distance > 2) distance = 2;
+
+    leds[i] = CHSV(hue, 255, ((2 - distance) / 2.0) * 255);
+  }
+}
+
+double smallestDistance(double a, double b, double limit) {
+  double big = a > b ? a : b;
+  double small = a > b ? b : a;
+  double distance1 = big - small;
+  double distance2 = (small + limit) - big;
+  if(distance1 < distance2) return distance1;
+  return distance2;
 }
 
 /**
@@ -166,7 +193,7 @@ void circleInToOut(long millis) {
  */
 void solidRed(long millis) {
   for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(inoise8(i, millis), 0, 0);
+    leds[i] = CHSV(0, 255, inoise8(i * 200, millis / 5) * 255);
   }
 }
 
@@ -177,7 +204,7 @@ void solidRed(long millis) {
  */
 void solidOrange(long millis) {
   for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(inoise8(i, millis), inoise8(i, millis) * (153 / 255.0), 0);
+    leds[i] = CHSV(15, 255, inoise8(i * 200, millis / 5) * 255);
   }
 }
 
@@ -188,7 +215,7 @@ void solidOrange(long millis) {
  */
 void solidGreen(long millis) {
   for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(0, inoise8(i, millis), 0);
+    leds[i] = CRGB(80, inoise8(i * 200, millis / 2), 0);
   }
 }
 
@@ -199,7 +226,7 @@ void solidGreen(long millis) {
  */
 void solidCyan(long millis) {
   for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(0, inoise8(i, millis) * (204.0 / 255), inoise8(i, millis));
+    leds[i] = CHSV(130, 255, inoise8(i * 200, millis / 5) * 255);
   }
 }
 
@@ -210,7 +237,7 @@ void solidCyan(long millis) {
  */
 void solidBlue(long millis) {
   for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(0, 0, inoise8(i, millis));
+    leds[i] = CHSV(160, 255, inoise8(i * 200, millis / 5));
   }
 }
 
@@ -221,6 +248,6 @@ void solidBlue(long millis) {
  */
 void solidMagenta(long millis) {
    for(int i = 0; i<NUM_LEDS; i++) {
-    leds[i] = CRGB(inoise8(i, millis), 0, inoise8(i, millis));
+    leds[i] = CHSV(220, 255, inoise8(i * 200, millis / 5) * 255);
   }
 }
