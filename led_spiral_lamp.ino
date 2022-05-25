@@ -65,7 +65,7 @@ void showMode(int mode, long millis) {
       toCenter(millis);
       break;
     case 5:
-      circleInToOut(millis);
+      serialSpriralsColors(millis);
       break;
     case 6:
       solidRed(millis);
@@ -182,8 +182,39 @@ double smallestDistance(double a, double b, double limit) {
  * 
  * @param millis timestamp to show animation to
  */
-void circleInToOut(long millis) {
+void serialSpriralsColors(long millis) {
   //TODO
+
+  int duration = (1000 * NUM_OFFSET);
+  int iteration = millis / duration;
+  int activeSpiral = millis % duration / 1000;
+
+  int hue0 = iteration * 10;
+  int hue1 = hue0 + 10;
+
+  double activePos = (millis % 1000 / 100.0);
+
+  //for every spiral
+  for(int i = 0; i<NUM_OFFSET; i++) {
+    if(i == activePos) continue; //if interpolating spiral -> continue
+
+    //set spiral to constant color
+    int hue = i < activePos ? hue1 : hue0;
+    for(int j = i; j < NUM_LEDS; j+=NUM_OFFSET) {
+      leds[j] = CHSV(hue, 255, 255);
+    }
+  }
+
+  //interpolate active spiral
+  for(int j = activeSpiral; j < NUM_LEDS; j+=NUM_OFFSET) {
+    int height = j - activeSpiral;
+    double distance = min(max(activePos - j, 0), 1);
+
+    int hue = distance * hue1 + (1 - distance) * hue0;
+
+    leds[j] = CHSV(hue, 255, 255);
+  }
+
 }
 
 /**
