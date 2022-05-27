@@ -7,7 +7,7 @@
 #define NUM_OFFSET 9
 CRGB leds[NUM_LEDS];
 
-byte mode = 4;
+byte mode = 0;
 int buttonState = 0;
 
 /**
@@ -71,7 +71,7 @@ void showMode(int mode, long millis) {
       toCenter(millis);
       break;
     case 5:
-      circleInToOut(millis);
+      serialSpriralsColors(millis);
       break;
     case 6:
       solidRed(millis);
@@ -162,7 +162,6 @@ void rainbowRoated(long millis) {
  * @param millis timestamp to show animation to
  */
 void toCenter(long millis) {
-  //TODO
   double pos = (millis % 9000) / 1000.0;
   for(int i = 0; i<NUM_LEDS; i++) {
     int offset = i % NUM_OFFSET;
@@ -184,12 +183,42 @@ double smallestDistance(double a, double b, double limit) {
 }
 
 /**
- * @brief Shows a circle from inside to outside changing to color
+ * @brief Shows a spral fading the color from bottom to top
  * 
  * @param millis timestamp to show animation to
  */
-void circleInToOut(long millis) {
-  //TODO
+void serialSpriralsColors(long millis) {
+
+  int duration = 1000 * NUM_OFFSET;
+  int iteration = millis / duration;
+  int activeSpiral = millis % duration / 1000;
+
+  int hue0 = iteration * 50;
+  int hue1 = hue0 + 50;
+
+  double activePos = millis % 1000 / 100.0;
+
+  //for every spiral
+  for(int i = 0; i<NUM_OFFSET; i++) {
+    if(i == activeSpiral) continue; //if interpolating spiral -> continue
+
+    //set spiral to constant color
+    int hue = i < activeSpiral ? hue1 : hue0;
+    for(int j = i; j < NUM_LEDS; j+=NUM_OFFSET) {
+      leds[j] = CHSV(hue, 255, 255);
+    }
+  }
+
+  //interpolate active spiral
+  for(int j = activeSpiral; j < NUM_LEDS; j+=NUM_OFFSET) {
+    int height = (j - activeSpiral) / NUM_OFFSET;
+    double distance = min(max(activePos - height, 0), 1);
+
+    int hue = distance * hue1 + (1 - distance) * hue0;
+
+    leds[j] = CHSV(hue, 255, 255);
+  }
+
 }
 
 /**
