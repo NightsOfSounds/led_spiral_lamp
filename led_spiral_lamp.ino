@@ -1,11 +1,13 @@
 #include <FastLED.h>
+#include <EEPROM.h>
+#define MODE_EEPROM 0
 #define DATA_PIN 2
 #define NUM_LEDS 86
 #define BUTTON_PORT 3
 #define NUM_OFFSET 9
 CRGB leds[NUM_LEDS];
 
-int mode = 0;
+byte mode = 0;
 int buttonState = 0;
 
 /**
@@ -23,6 +25,9 @@ void setup() {
 
   // init button
   pinMode(BUTTON_PORT, INPUT_PULLUP);
+
+  //init mode
+  mode = EEPROM.read(MODE_EEPROM);
 }
 
 /**
@@ -33,6 +38,7 @@ void loop() {
   int newState = digitalRead(BUTTON_PORT); //LOW -> Pressed
   if(newState == LOW && buttonState == HIGH) {
     mode = (mode + 1) % 12;
+    EEPROM.write(MODE_EEPROM, mode);
   }
   buttonState = newState;
 
