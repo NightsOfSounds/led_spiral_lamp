@@ -8,6 +8,7 @@ Data-Pin:
 Button-Input:
 - Port: 3
 - Active: Low
+- Debounced
 
 ## LED-Modes:
 
@@ -16,7 +17,7 @@ Button-Input:
 3. Random Colors
 4. Rotated Rainbow
 5. Top and Bottom to center
-6. 
+6. Advanced Spiral
 7. Solid Red
 8. Solid Orange
 9. Solid Green
